@@ -45,7 +45,7 @@ Add the package to your `Package.swift` file:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/fatbobman/SimpleLogger.git", from: "0.0.1")
+    .package(url: "https://github.com/fatbobman/SimpleLogger.git", from: "0.5.0")
 ]
 ```
 
