@@ -26,8 +26,7 @@ public protocol LoggerManagerProtocol: Sendable {
         level: LogLevel,
         file: String,
         function: String,
-        line: Int
-    )
+        line: Int)
 }
 
 /// Default implementations for the `LoggerManagerProtocol`.
@@ -85,7 +84,15 @@ extension LoggerManagerProtocol where Self == LoggerManager {
     ///   - subsystem: The subsystem name.
     ///   - category: The category name.
     public static func `default`(subsystem: String, category: String) -> Self {
-        LoggerManager(backend: OSLogBackend(subsystem: subsystem, category: category))
+        #if canImport(OSLog)
+        if #available(iOS 14.0, macOS 11.0, watchOS 7.0, tvOS 14.0, visionOS 1.0, *) {
+            LoggerManager(backend: OSLogBackend(subsystem: subsystem, category: category))
+        } else {
+            LoggerManager(backend: ConsoleLogBackend(subsystem: subsystem, category: category))
+        }
+        #else
+        LoggerManager(backend: ConsoleLogBackend(subsystem: subsystem, category: category))
+        #endif
     }
 
     /// Creates a `LoggerManager` instance that logs to the console.
