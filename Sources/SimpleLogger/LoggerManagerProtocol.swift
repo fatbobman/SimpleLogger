@@ -88,10 +88,10 @@ extension LoggerManagerProtocol where Self == LoggerManager {
         if #available(iOS 14.0, macOS 11.0, watchOS 7.0, tvOS 14.0, visionOS 1.0, *) {
             LoggerManager(backend: OSLogBackend(subsystem: subsystem, category: category))
         } else {
-            LoggerManager(backend: ConsoleLogBackend(subsystem: subsystem, category: category))
+            LoggerManager(backend: ConsoleLogBackend(subsystem: subsystem, category: category, verbosity: .standard, useStderr: false))
         }
         #else
-        LoggerManager(backend: ConsoleLogBackend(subsystem: subsystem, category: category))
+        LoggerManager(backend: ConsoleLogBackend(subsystem: subsystem, category: category, verbosity: .standard, useStderr: false))
         #endif
     }
 
@@ -99,7 +99,23 @@ extension LoggerManagerProtocol where Self == LoggerManager {
     ///
     /// - Parameters:
     ///   - subsystem: The subsystem name.
-    public static func console(subsystem: String = "Console Logger") -> Self {
-        LoggerManager(backend: ConsoleLogBackend(subsystem: subsystem))
+    ///   - category: The category name.
+    ///   - verbosity: The console output verbosity level.
+    ///   - useStderr: Whether to use stderr instead of stdout for output.
+    ///   - enableColors: Whether to enable ANSI color codes.
+    public static func console(
+        subsystem: String = "Console Logger", 
+        category: String = "", 
+        verbosity: ConsoleVerbosity = .detailed,
+        useStderr: Bool = false,  // Default to stdout for better visibility in tests
+        enableColors: Bool = true
+    ) -> Self {
+        LoggerManager(backend: ConsoleLogBackend(
+            subsystem: subsystem, 
+            category: category, 
+            verbosity: verbosity,
+            useStderr: useStderr,
+            enableColors: enableColors
+        ))
     }
 }

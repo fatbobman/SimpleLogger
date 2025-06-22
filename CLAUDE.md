@@ -37,8 +37,8 @@ swift test
 
 ### Built-in Backends
 
-- **OSLogBackend** (`Sources/SimpleLogger/Backend/OSLogBackend.swift`): Uses Apple's unified logging system, includes environment-based disable functionality and debug/release mode handling. Only available on Apple platforms (`#if canImport(OSLog)`)
-- **ConsoleLogBackend** (`Sources/SimpleLogger/Backend/ConsoleBackend.swift`): Simple console output with timestamp formatting. Cross-platform compatible
+- **OSLogBackend** (`Sources/SimpleLogger/Backend/OSLogBackend.swift`): Enhanced implementation of Apple's unified logging system with privacy support, configurable warning levels, input validation, and optimized performance. Only available on Apple platforms (`#if canImport(OSLog)`)
+- **ConsoleLogBackend** (`Sources/SimpleLogger/Backend/ConsoleBackend.swift`): Enhanced console output with configurable verbosity levels, stderr/stdout selection, ANSI colors, and proper Linux compatibility. Cross-platform compatible
 
 ### Key Design Patterns
 
@@ -57,6 +57,66 @@ Implement `LoggerBackend` protocol with:
 - `log(level:message:metadata:)` method
 - Must be `Sendable` for thread safety
 
+### Console Verbosity Levels
+
+ConsoleLogBackend supports four verbosity levels (`ConsoleVerbosity`) and advanced output options:
+- `.silent` - No output
+- `.minimal` - Message only
+- `.standard` - Timestamp, level, and message
+- `.detailed` - Full metadata including file, function, and line number
+
+Output Features:
+- **stderr vs stdout**: Use `useStderr: true` for proper log separation (default: false for better test visibility)
+- **ANSI Colors**: Use `enableColors: true` (default) for colored output on supporting terminals
+- **Cross-platform**: Optimized buffering and flushing for Linux/Unix systems
+
+Usage examples:
+```swift
+// Silent logger (no output)
+let logger = LoggerManager.console(verbosity: .silent)
+
+// Minimal output
+let logger = LoggerManager.console(verbosity: .minimal)
+
+// Standard output (default for .default() method)
+let logger = LoggerManager.console(verbosity: .standard)
+
+// Detailed output (default for .console() method)
+let logger = LoggerManager.console(verbosity: .detailed)
+
+// Custom environment key for disabling
+let logger = LoggerManager(backend: ConsoleLogBackend(
+    subsystem: "MyApp", 
+    category: "Network", 
+    verbosity: .standard,
+    environmentKey: "DISABLE_NETWORK_LOGS"
+))
+
+// Linux-optimized logger with stderr and colors
+let linuxLogger = LoggerManager.console(
+    subsystem: "LinuxApp",
+    category: "Service",
+    verbosity: .standard,
+    useStderr: true,      // Send logs to stderr (recommended for production)
+    enableColors: true    // ANSI colors for better readability
+)
+
+// Production logger without colors
+let prodLogger = LoggerManager(backend: ConsoleLogBackend(
+    subsystem: "ProdApp",
+    verbosity: .minimal,
+    useStderr: true,
+    enableColors: false   // No colors for log files
+))
+
+// Enhanced OSLog with fault-level warnings
+let osLogger = LoggerManager(backend: OSLogBackend(
+    subsystem: "com.myapp.critical",
+    category: "security", 
+    enhancedWarnings: true  // Maps warnings to .fault for better visibility
+))
+```
+
 ### Testing Patterns
 
 Use the test pattern from `LoggerManagerTests.swift:23-28` for custom logger testing:
@@ -71,7 +131,7 @@ struct CustomLogger: LoggerManagerProtocol {
 
 ### Environment Configuration
 
-OSLogBackend respects `DisableLogger` environment variable (set to "true", "1", or "yes" to disable).
+Both OSLogBackend and ConsoleLogBackend respect the `DisableLogger` environment variable (set to "true", "1", or "yes" to disable logging). You can also specify a custom environment key when creating backends.
 
 ## Cross-Platform Support
 
