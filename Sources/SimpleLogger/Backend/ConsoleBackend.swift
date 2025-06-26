@@ -101,26 +101,10 @@ public final class ConsoleLogBackend: LoggerBackend {
         
         if useStderr {
             FileHandle.standardError.write(data)
-            try? FileHandle.standardError.synchronize()  // Force flush
-            #if os(Linux)
-            // Use unsafe pointer access for Linux compatibility
-            withUnsafePointer(to: stderr) { _ in
-                fflush(stderr)
-            }
-            #else
-            fflush(stderr)
-            #endif
+            try? FileHandle.standardError.synchronize()  // Force flush - sufficient for most cases
         } else {
             FileHandle.standardOutput.write(data)
-            try? FileHandle.standardOutput.synchronize()  // Force flush
-            #if os(Linux)
-            // Use unsafe pointer access for Linux compatibility
-            withUnsafePointer(to: stdout) { _ in
-                fflush(stdout)
-            }
-            #else
-            fflush(stdout)
-            #endif
+            try? FileHandle.standardOutput.synchronize()  // Force flush - sufficient for most cases
         }
     }
     
