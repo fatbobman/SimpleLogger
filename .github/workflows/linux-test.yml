@@ -2,7 +2,7 @@ name: Linux Specific Tests
 
 on:
   push:
-    branches: [ main, fix-linux-concurrency ]
+    branches: [ main, develop ]
   pull_request:
     branches: [ main ]
 
@@ -64,9 +64,9 @@ jobs:
         swift test --filter customLoggerTest
         swift test --filter consoleLoggerTest
     
-    - name: Performance Test on Linux
+    - name: Stress Test on Linux
       run: |
-        echo "Running performance tests for large volume logging on Linux..."
-        time swift test --filter "MockLogBackend - Large volume logging"
-        echo "Testing concurrent logging performance..."
-        time swift test --filter "MockLogBackend - Concurrent logging"
+        echo "Running stress tests for large volume logging on Linux..."
+        swift test --filter "MockLogBackend - Large volume logging"
+        echo "Testing concurrent logging reliability..."
+        swift test --filter "MockLogBackend - Concurrent logging"
