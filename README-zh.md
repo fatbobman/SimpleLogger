@@ -50,7 +50,7 @@
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/fatbobman/SimpleLogger.git", from: "0.5.0")
+    .package(url: "https://github.com/fatbobman/SimpleLogger.git", from: "0.7.0")
 ]
 ```
 
