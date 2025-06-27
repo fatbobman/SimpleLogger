@@ -85,13 +85,13 @@ extension LoggerManagerProtocol where Self == LoggerManager {
     ///   - category: The category name.
     public static func `default`(subsystem: String, category: String) -> Self {
         #if canImport(OSLog)
-        if #available(iOS 14.0, macOS 11.0, watchOS 7.0, tvOS 14.0, visionOS 1.0, *) {
-            LoggerManager(backend: OSLogBackend(subsystem: subsystem, category: category))
-        } else {
-            LoggerManager(backend: ConsoleLogBackend(subsystem: subsystem, category: category, verbosity: .standard, useStderr: false))
-        }
+            if #available(iOS 14.0, macOS 11.0, watchOS 7.0, tvOS 14.0, visionOS 1.0, *) {
+                LoggerManager(backend: OSLogBackend(subsystem: subsystem, category: category))
+            } else {
+                LoggerManager(backend: ConsoleLogBackend(subsystem: subsystem, category: category, verbosity: .standard, useStderr: false))
+            }
         #else
-        LoggerManager(backend: ConsoleLogBackend(subsystem: subsystem, category: category, verbosity: .standard, useStderr: false))
+            LoggerManager(backend: ConsoleLogBackend(subsystem: subsystem, category: category, verbosity: .standard, useStderr: false))
         #endif
     }
 
@@ -104,18 +104,32 @@ extension LoggerManagerProtocol where Self == LoggerManager {
     ///   - useStderr: Whether to use stderr instead of stdout for output.
     ///   - enableColors: Whether to enable ANSI color codes.
     public static func console(
-        subsystem: String = "Console Logger", 
-        category: String = "", 
+        subsystem: String = "Console Logger",
+        category: String = "",
         verbosity: ConsoleVerbosity = .detailed,
-        useStderr: Bool = false,  // Default to stdout for better visibility in tests
-        enableColors: Bool = true
-    ) -> Self {
+        useStderr: Bool = false, // Default to stdout for better visibility in tests
+        enableColors: Bool = true) -> Self
+    {
         LoggerManager(backend: ConsoleLogBackend(
-            subsystem: subsystem, 
-            category: category, 
+            subsystem: subsystem,
+            category: category,
             verbosity: verbosity,
             useStderr: useStderr,
-            enableColors: enableColors
-        ))
+            enableColors: enableColors))
     }
 }
+
+#if DEBUG
+    @available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
+    extension LoggerManagerProtocol where Self == MockLogBackend {
+        /// Creates a mock logger for testing purposes.
+        ///
+        /// This factory method provides a convenient way to create a ``MockLogBackend`` instance
+        /// for use in unit tests and test scenarios.
+        ///
+        /// - Returns: A new ``MockLogBackend`` instance ready for testing
+        public static func mock() -> Self {
+            MockLogBackend()
+        }
+    }
+#endif

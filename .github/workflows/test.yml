@@ -1,0 +1,141 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-macos:
+    name: Test on macOS
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Select Xcode version
+      run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+    
+    - name: Build
+      run: swift build
+    
+    - name: Run all tests
+      run: swift test
+    
+    - name: Test MockLogBackend Core Features
+      run: |
+        echo "Testing MockLogBackend core functionality..."
+        swift test --filter "MockLogBackend - Basic logging capture"
+        swift test --filter "MockLogBackend - Clear logs function"
+        swift test --filter "MockLogBackend - Log level checking"
+        swift test --filter "MockLogBackend - Content searching"
+    
+    - name: Test MockLogBackend Advanced Features
+      run: |
+        echo "Testing MockLogBackend advanced features..."
+        swift test --filter "MockLogBackend - Log sequence verification"
+        swift test --filter "MockLogBackend - Pattern matching"
+        swift test --filter "MockLogBackend - Async log waiting"
+        swift test --filter "MockLogBackend - Concurrent logging"
+    
+    - name: Test MockLogBackend Factory Method
+      run: |
+        echo "Testing MockLogBackend factory method..."
+        swift test --filter "Factory method"
+    
+    - name: Test OSLog Integration
+      run: |
+        echo "Testing OSLog enhanced warnings on macOS..."
+        swift test --filter osLogEnhancedWarningsTest
+
+  test-ios:
+    name: Test on iOS Simulator
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Select Xcode version
+      run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+    
+    - name: List available simulators
+      run: xcrun simctl list devices iOS
+    
+    - name: Build for iOS
+      run: swift build --destination generic/platform=iOS
+    
+    - name: Test on iOS Simulator
+      run: |
+        # Find an iOS simulator
+        SIMULATOR_ID=$(xcrun simctl list devices iOS | grep "iPhone" | grep "(" | head -1 | sed 's/.*(\([^)]*\)).*/\1/')
+        echo "Using simulator: $SIMULATOR_ID"
+        xcrun simctl boot $SIMULATOR_ID || true
+        
+        # Run tests on iOS simulator
+        swift test --destination "platform=iOS Simulator,id=$SIMULATOR_ID"
+
+  test-linux:
+    name: Test on Linux (Ubuntu)
+    runs-on: ubuntu-latest
+    container:
+      image: swift:6.0
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Build
+      run: swift build
+    
+    - name: Run all tests
+      run: swift test
+    
+    - name: Test Console Backend Linux Features
+      run: |
+        echo "Testing Linux-specific console features..."
+        swift test --filter consoleOutputFeaturesTest
+        swift test --filter consoleVerbosityTest
+    
+    - name: Test Environment Variables
+      run: |
+        echo "Testing environment disable functionality..."
+        DisableLogger=true swift test --filter consoleEnvironmentDisableTest
+    
+    - name: Test MockLogBackend on Linux (Swift 6 Synchronization)
+      run: |
+        echo "Testing MockLogBackend with Swift 6 Synchronization framework on Linux..."
+        swift test --filter "MockLogBackend - Basic logging capture"
+        swift test --filter "MockLogBackend - Concurrent logging"
+        swift test --filter "MockLogBackend - Large volume logging"
+        echo "Testing factory method on Linux..."
+        swift test --filter "Factory method"
+    
+    - name: Test Cross-Platform Console Features
+      run: |
+        echo "Testing cross-platform console features with stderr/colors..."
+        swift test --filter consoleOutputFeaturesTest
+
+  test-coverage:
+    name: Test Coverage Report
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Select Xcode version
+      run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+    
+    - name: Run tests with coverage
+      run: swift test --enable-code-coverage
+    
+    - name: Generate coverage report
+      run: |
+        xcrun llvm-cov export -format="lcov" \
+          .build/debug/SimpleLoggerPackageTests.xctest/Contents/MacOS/SimpleLoggerPackageTests \
+          -instr-profile .build/debug/codecov/default.profdata > coverage.lcov
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.lcov
+        fail_ci_if_error: true

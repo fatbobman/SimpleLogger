@@ -1,4 +1,4 @@
-name: Linux Tests
+name: Linux Specific Tests
 
 on:
   push:
@@ -7,8 +7,8 @@ on:
     branches: [ main ]
 
 jobs:
-  linux-test:
-    name: Test on Linux
+  linux-specific-test:
+    name: Linux-Specific Features Test
     runs-on: ubuntu-latest
     container:
       image: swift:6.0
@@ -19,16 +19,54 @@ jobs:
     - name: Build
       run: swift build
     
-    - name: Run tests
+    - name: Run all tests
       run: swift test
     
-    - name: Test Console Backend Linux Features
+    - name: Test Console Backend Linux-Specific Features
       run: |
         echo "Testing Linux-specific console features..."
+        echo "- Testing stderr/stdout routing"
+        echo "- Testing ANSI color support"
+        echo "- Testing Linux buffering and flushing"
         swift test --filter consoleOutputFeaturesTest
         swift test --filter consoleVerbosityTest
     
-    - name: Test Environment Variables
+    - name: Test Environment Variables on Linux
       run: |
-        echo "Testing environment disable functionality..."
+        echo "Testing environment disable functionality on Linux..."
         DisableLogger=true swift test --filter consoleEnvironmentDisableTest
+        echo "Testing custom environment keys..."
+        CUSTOM_DISABLE=true swift test --filter consoleEnvironmentDisableTest
+    
+    - name: Test MockLogBackend Cross-Platform Compatibility
+      run: |
+        echo "Testing MockLogBackend with Swift 6 Synchronization framework on Linux..."
+        echo "- Verifying Mutex threading behavior"
+        echo "- Testing concurrent access patterns"
+        swift test --filter "MockLogBackend - Concurrent logging"
+        swift test --filter "MockLogBackend - Large volume logging"
+        swift test --filter "MockLogBackend - Async log waiting"
+    
+    - name: Test MockLogBackend Factory Method on Linux
+      run: |
+        echo "Testing factory method cross-platform compatibility..."
+        swift test --filter "Factory method"
+    
+    - name: Verify No OSLog Dependencies on Linux
+      run: |
+        echo "Verifying that OSLog-specific tests are properly skipped on Linux..."
+        # This should not find any OSLog tests running on Linux
+        ! swift test --filter osLogEnhancedWarningsTest 2>&1 | grep -q "passed" || echo "Warning: OSLog tests should not run on Linux"
+    
+    - name: Test Console Logger as Default on Linux
+      run: |
+        echo "Testing that console logger is used as default on non-Apple platforms..."
+        swift test --filter customLoggerTest
+        swift test --filter consoleLoggerTest
+    
+    - name: Performance Test on Linux
+      run: |
+        echo "Running performance tests for large volume logging on Linux..."
+        time swift test --filter "MockLogBackend - Large volume logging"
+        echo "Testing concurrent logging performance..."
+        time swift test --filter "MockLogBackend - Concurrent logging"

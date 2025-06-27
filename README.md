@@ -1,6 +1,10 @@
 # SimpleLogger
 
+**English | [中文](README-zh.md)**
+
 A powerful yet simple logging library for Swift 6, providing comprehensive cross-platform logging with enhanced backends, configurable output levels, and seamless Apple ecosystem integration.
+
+![Swift 6](https://img.shields.io/badge/Swift-6-orange?logo=swift) ![iOS](https://img.shields.io/badge/iOS-14.0+-green) ![macOS](https://img.shields.io/badge/macOS-11.0+-green) ![watchOS](https://img.shields.io/badge/watchOS-7.0+-green) ![visionOS](https://img.shields.io/badge/visionOS-1.0+-green) ![tvOS](https://img.shields.io/badge/tvOS-14.0+-green) [![Tests](https://github.com/fatbobman/SimpleLogger/actions/workflows/test.yml/badge.svg)](https://github.com/fatbobman/SimpleLogger/actions/workflows/test.yml) [![Linux Tests](https://github.com/fatbobman/SimpleLogger/actions/workflows/linux-test.yml/badge.svg)](https://github.com/fatbobman/SimpleLogger/actions/workflows/linux-test.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/fatbobman/SimpleLogger)
 
 ## Features
 
@@ -29,6 +33,7 @@ A powerful yet simple logging library for Swift 6, providing comprehensive cross
 
 - **Custom Backends**: Easily create custom log backends by conforming to `LoggerBackend`
 - **Protocol-Oriented Design**: Clean abstractions for testing and mocking
+- **MockLogBackend**: Powerful testing utilities with thread-safe log capture and inspection
 - **Comprehensive Documentation**: Built-in Claude Code development guidance
 
 ## Requirements
@@ -265,12 +270,132 @@ class WebServer {
 }
 ```
 
-### 🧪 **Testing with Custom Loggers**
+### 🧪 **Testing with MockLogBackend**
+
+SimpleLogger provides a powerful `MockLogBackend` for comprehensive testing scenarios:
 
 ```swift
 import Testing
 import SimpleLogger
 
+@Test func userServiceLogsCorrectly() async throws {
+    // Create a mock logger to capture log calls
+    let mockLogger = MockLogBackend()
+    let userService = UserService(logger: mockLogger)
+    
+    // Perform the operation
+    await userService.createUser(name: "John")
+    
+    // Verify logging behavior
+    #expect(mockLogger.hasInfoLogs)
+    #expect(mockLogger.logCount(for: .info) == 1)
+    #expect(mockLogger.hasLog(level: .info, containing: "User created"))
+    
+    // Check specific log details
+    let lastLog = mockLogger.getLastLog()
+    #expect(lastLog?.level == .info)
+    #expect(lastLog?.message.contains("John"))
+}
+
+@Test func asyncLoggingTest() async throws {
+    let mockLogger = MockLogBackend()
+    let service = AsyncService(logger: mockLogger)
+    
+    // Start async operation
+    Task {
+        try await Task.sleep(nanoseconds: 50_000_000) // 50ms delay
+        service.processData()
+    }
+    
+    // Wait for the async log to appear
+    let found = await mockLogger.waitForLog(
+        level: .info, 
+        containing: "Processing complete", 
+        timeout: 0.2
+    )
+    #expect(found)
+}
+
+@Test func logSequenceVerification() async throws {
+    let mockLogger = MockLogBackend()
+    let workflow = DataWorkflow(logger: mockLogger)
+    
+    await workflow.execute()
+    
+    // Verify the exact sequence of log levels
+    let expectedSequence: [LogLevel] = [.info, .debug, .info, .warning]
+    #expect(mockLogger.verifyLogSequence(expectedSequence))
+    
+    // Verify last few logs only
+    #expect(mockLogger.verifyLastLogs([.info, .warning]))
+}
+
+@Test func patternMatchingTest() async throws {
+    let mockLogger = MockLogBackend()
+    let apiClient = APIClient(logger: mockLogger)
+    
+    await apiClient.makeRequest(url: "https://api.example.com/users/123")
+    
+    // Complex pattern matching
+    let hasAPICall = mockLogger.hasLogMatching(level: .info) { message in
+        message.contains("API request") && message.contains("users/123")
+    }
+    #expect(hasAPICall)
+    
+    // Check for specific error patterns
+    if mockLogger.hasErrorLogs {
+        let hasTimeoutError = mockLogger.hasLogMatching(level: .error) { message in
+            message.lowercased().contains("timeout")
+        }
+        // Handle timeout-specific test logic
+    }
+}
+```
+
+#### MockLogBackend Features
+
+- **Thread-Safe**: Uses Swift 6 `Synchronization.Mutex` for concurrent access
+- **Comprehensive Inspection**: Check logs by level, content, patterns, and sequences
+- **Async Support**: `waitForLog()` method for testing asynchronous operations
+- **Cross-Platform**: Available on all platforms supporting Swift 6
+- **Debug-Only**: Only compiled in DEBUG builds to avoid production overhead
+
+#### Available Testing Methods
+
+```swift
+// Quick level checks
+mockLogger.hasDebugLogs     // Bool
+mockLogger.hasInfoLogs      // Bool  
+mockLogger.hasWarningLogs   // Bool
+mockLogger.hasErrorLogs     // Bool
+
+// Counting and filtering
+mockLogger.totalLogCount                    // Int
+mockLogger.logCount(for: .info)            // Int
+mockLogger.getLogMessages(for: .error)     // [String]
+mockLogger.allLogMessages                  // [String]
+
+// Content searching
+mockLogger.hasLog(level: .info, containing: "substring")
+mockLogger.hasLogMatching(level: .error) { $0.contains("timeout") }
+
+// Sequence verification
+mockLogger.verifyLogSequence([.debug, .info, .warning])
+mockLogger.verifyLastLogs([.info, .error])
+
+// Async testing
+await mockLogger.waitForLog(level: .info, containing: "complete", timeout: 1.0)
+
+// Maintenance
+mockLogger.clearLogs()                     // Clear all captured logs
+mockLogger.getLastLog()                    // (level, message)?
+```
+
+### 🎨 **Custom Testing Logger (Alternative)**
+
+For simpler testing scenarios, you can also create a custom logger:
+
+```swift
 struct TestLogger: LoggerManagerProtocol {
     let expectation: @Sendable (String, LogLevel) -> Void
     
@@ -279,19 +404,18 @@ struct TestLogger: LoggerManagerProtocol {
     }
 }
 
-@Test func userServiceLogsCorrectly() async throws {
-    var loggedMessages: [(String, LogLevel)] = []
+@Test func simpleLoggingTest() async throws {
+    var capturedLog: (String, LogLevel)?
     
     let testLogger = TestLogger { message, level in
-        loggedMessages.append((message, level))
+        capturedLog = (message, level)
     }
     
-    let userService = UserService(logger: testLogger)
-    await userService.createUser(name: "John")
+    let service = SimpleService(logger: testLogger)
+    service.doSomething()
     
-    #expect(loggedMessages.count == 1)
-    #expect(loggedMessages[0].0.contains("User created"))
-    #expect(loggedMessages[0].1 == .info)
+    #expect(capturedLog?.0.contains("Action completed"))
+    #expect(capturedLog?.1 == .info)
 }
 ```
 
@@ -346,3 +470,14 @@ logger.debug("JWT token validation steps")      // Debug for development only
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+---
+
+## Support the project
+
+- [🎉 Subscribe to my Swift Weekly](https://weekly.fatbobman.com)
+- [☕️ Buy Me A Coffee](https://buymeacoffee.com/fatbobman)
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=fatbobman/SimpleLogger&type=Date)](https://star-history.com/#fatbobman/SimpleLogger&Date)
