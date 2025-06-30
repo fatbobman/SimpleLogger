@@ -8,10 +8,6 @@ import Testing
 
     @Test("MockLogBackend - Basic logging capture")
     func mockLogBackendBasicLogging() async throws {
-        guard #available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *) else {
-            return // Skip test on older platforms
-        }
-
         let mockLogger = MockLogBackend()
 
         mockLogger.info("Test info message")
@@ -27,10 +23,6 @@ import Testing
 
     @Test("MockLogBackend - Clear logs function")
     func mockLogBackendClearLogs() async throws {
-        guard #available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *) else {
-            return // Skip test on older platforms
-        }
-
         let mockLogger = MockLogBackend()
 
         mockLogger.info("Message 1")
@@ -44,10 +36,6 @@ import Testing
 
     @Test("MockLogBackend - Log level checking")
     func mockLogBackendLogLevelChecking() async throws {
-        guard #available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *) else {
-            return // Skip test on older platforms
-        }
-
         let mockLogger = MockLogBackend()
 
         mockLogger.debug("Debug message")
@@ -63,10 +51,6 @@ import Testing
 
     @Test("MockLogBackend - Specific level filtering")
     func mockLogBackendSpecificLevelFiltering() async throws {
-        guard #available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *) else {
-            return // Skip test on older platforms
-        }
-
         let mockLogger = MockLogBackend()
 
         mockLogger.info("Info 1")
@@ -92,10 +76,6 @@ import Testing
 
     @Test("MockLogBackend - Content searching")
     func mockLogBackendContentSearching() async throws {
-        guard #available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *) else {
-            return // Skip test on older platforms
-        }
-
         let mockLogger = MockLogBackend()
 
         mockLogger.info("User logged in successfully")
@@ -114,10 +94,6 @@ import Testing
 
     @Test("MockLogBackend - Log count by level")
     func mockLogBackendLogCountByLevel() async throws {
-        guard #available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *) else {
-            return // Skip test on older platforms
-        }
-
         let mockLogger = MockLogBackend()
 
         mockLogger.debug("Debug 1")
@@ -137,10 +113,6 @@ import Testing
 
     @Test("MockLogBackend - Log sequence verification")
     func mockLogBackendLogSequenceVerification() async throws {
-        guard #available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *) else {
-            return // Skip test on older platforms
-        }
-
         let mockLogger = MockLogBackend()
 
         mockLogger.info("First")
@@ -160,10 +132,6 @@ import Testing
 
     @Test("MockLogBackend - Last logs verification")
     func mockLogBackendLastLogsVerification() async throws {
-        guard #available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *) else {
-            return // Skip test on older platforms
-        }
-
         let mockLogger = MockLogBackend()
 
         mockLogger.debug("Old debug")
@@ -191,10 +159,6 @@ import Testing
 
     @Test("MockLogBackend - Pattern matching")
     func mockLogBackendPatternMatching() async throws {
-        guard #available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *) else {
-            return // Skip test on older platforms
-        }
-
         let mockLogger = MockLogBackend()
 
         mockLogger.info("User ID: 12345")
@@ -215,10 +179,6 @@ import Testing
 
     @Test("MockLogBackend - Async log waiting")
     func mockLogBackendAsyncLogWaiting() async throws {
-        guard #available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *) else {
-            return // Skip test on older platforms
-        }
-
         let mockLogger = MockLogBackend()
 
         // Start async task that logs after delay
@@ -238,10 +198,6 @@ import Testing
 
     @Test("MockLogBackend - Empty logger state")
     func mockLogBackendEmptyLoggerState() async throws {
-        guard #available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *) else {
-            return // Skip test on older platforms
-        }
-
         let mockLogger = MockLogBackend()
 
         #expect(mockLogger.logCalls.isEmpty)
@@ -262,10 +218,6 @@ import Testing
 
     @Test("MockLogBackend - Large volume logging")
     func mockLogBackendLargeVolumeLogging() async throws {
-        guard #available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *) else {
-            return // Skip test on older platforms
-        }
-
         let mockLogger = MockLogBackend()
 
         // Add many logs
@@ -296,10 +248,6 @@ import Testing
 
     @Test("MockLogBackend - Concurrent logging")
     func mockLogBackendConcurrentLogging() async throws {
-        guard #available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *) else {
-            return // Skip test on older platforms
-        }
-
         let mockLogger = MockLogBackend()
 
         // Create multiple concurrent tasks

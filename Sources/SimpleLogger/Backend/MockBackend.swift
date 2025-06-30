@@ -1,20 +1,19 @@
 import Foundation
-import Synchronization
 
 #if DEBUG
 
     /// A mock logger implementation for testing purposes.
     ///
     /// `MockLogBackend` captures all log calls in memory and provides various inspection methods
-    /// to verify logging behavior in unit tests. It's thread-safe using `Synchronization.Mutex`
+    /// to verify logging behavior in unit tests. It's thread-safe using NSLock
     /// and only available in DEBUG builds.
     ///
     /// ## Features
-    /// - Thread-safe log capture using Swift 6 Synchronization framework
+    /// - Thread-safe log capture using NSLock for cross-platform compatibility
     /// - Comprehensive inspection methods for testing assertions
     /// - Async waiting capabilities for testing concurrent logging
     /// - Pattern matching and sequence verification
-    /// - Available on all platforms that support Swift 6
+    /// - Available on all platforms (iOS 13+, macOS 10.15+, Linux)
     ///
     /// ## Usage
     /// ```swift
@@ -22,19 +21,21 @@ import Synchronization
     /// mockLogger.info("Test message")
     ///
     /// // Verify logging behavior
-    /// XCTAssertTrue(mockLogger.hasInfoLogs)
-    /// XCTAssertEqual(mockLogger.logCount(for: .info), 1)
-    /// XCTAssertTrue(mockLogger.hasLog(level: .info, containing: "Test"))
+    /// #expect(mockLogger.hasInfoLogs == true)
+    /// #expect(mockLogger.logCount(for: .info) == 1)
+    /// #expect(mockLogger.hasLog(level: .info, containing: "Test") == true)
     /// ```
-    @available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
-    public final class MockLogBackend: LoggerManagerProtocol {
+    public final class MockLogBackend: LoggerManagerProtocol, @unchecked Sendable {
         /// Thread-safe storage for captured log calls
-        private let _logCalls: Mutex<[(level: LogLevel, message: String)]> = .init([])
+        private var _logCalls: [(level: LogLevel, message: String)] = []
+        private let lock = NSLock()
 
         /// Returns all captured log calls as an array of (level, message) tuples.
         /// This property is thread-safe and returns a snapshot of all logs at the time of access.
         public var logCalls: [(level: LogLevel, message: String)] {
-            _logCalls.withLock { $0 }
+            lock.lock()
+            defer { lock.unlock() }
+            return _logCalls
         }
 
         /// Initializes a new MockLogBackend instance.
@@ -50,7 +51,9 @@ import Synchronization
         ///   - function: The function name (metadata, not stored)
         ///   - line: The line number (metadata, not stored)
         public func log(_ message: String, level: LogLevel, file: String, function: String, line: Int) {
-            _logCalls.withLock { $0.append((level: level, message: message)) }
+            lock.lock()
+            defer { lock.unlock() }
+            _logCalls.append((level: level, message: message))
         }
 
         // MARK: - Test Helper Methods
@@ -58,7 +61,9 @@ import Synchronization
         /// Clears all captured log entries.
         /// This method is thread-safe and removes all previously captured logs.
         public func clearLogs() {
-            _logCalls.withLock { $0.removeAll() }
+            lock.lock()
+            defer { lock.unlock() }
+            _logCalls.removeAll()
         }
 
         /// Checks if there's a log entry with the specified level containing the given substring.
@@ -68,7 +73,9 @@ import Synchronization
         ///   - substring: The substring to search for in log messages
         /// - Returns: `true` if a matching log entry is found, `false` otherwise
         public func hasLog(level: LogLevel, containing substring: String) -> Bool {
-            _logCalls.withLock { $0.contains { $0.level == level && $0.message.contains(substring) } }
+            lock.lock()
+            defer { lock.unlock() }
+            return _logCalls.contains { $0.level == level && $0.message.contains(substring) }
         }
 
         /// Returns all log messages for a specific log level.
@@ -76,46 +83,59 @@ import Synchronization
         /// - Parameter level: The log level to filter by
         /// - Returns: An array of log messages matching the specified level
         public func getLogMessages(for level: LogLevel) -> [String] {
-            _logCalls.withLock { $0.filter { $0.level == level }.map(\.message) }
+            lock.lock()
+            defer { lock.unlock() }
+            return _logCalls.filter { $0.level == level }.map(\.message)
         }
 
         /// Returns the most recently captured log entry.
         ///
         /// - Returns: A tuple containing the level and message of the last log, or `nil` if no logs exist
         public func getLastLog() -> (level: LogLevel, message: String)? {
-            _logCalls.withLock { $0.last }
+            lock.lock()
+            defer { lock.unlock() }
+            return _logCalls.last
         }
     }
 
     // MARK: - Convenience Extensions
 
-    @available(macOS 15.0, iOS 18.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *)
     extension MockLogBackend {
         // MARK: - Quick Log Level Checks
 
         /// Returns `true` if any error-level logs have been captured.
         public var hasErrorLogs: Bool {
-            _logCalls.withLock { $0.contains { $0.level == .error } }
+            lock.lock()
+            defer { lock.unlock() }
+            return _logCalls.contains { $0.level == .error }
         }
 
         /// Returns `true` if any warning-level logs have been captured.
         public var hasWarningLogs: Bool {
-            _logCalls.withLock { $0.contains { $0.level == .warning } }
+            lock.lock()
+            defer { lock.unlock() }
+            return _logCalls.contains { $0.level == .warning }
         }
 
         /// Returns `true` if any info-level logs have been captured.
         public var hasInfoLogs: Bool {
-            _logCalls.withLock { $0.contains { $0.level == .info } }
+            lock.lock()
+            defer { lock.unlock() }
+            return _logCalls.contains { $0.level == .info }
         }
 
         /// Returns `true` if any debug-level logs have been captured.
         public var hasDebugLogs: Bool {
-            _logCalls.withLock { $0.contains { $0.level == .debug } }
+            lock.lock()
+            defer { lock.unlock() }
+            return _logCalls.contains { $0.level == .debug }
         }
 
         /// Returns all captured log messages as an array of strings, regardless of level.
         public var allLogMessages: [String] {
-            _logCalls.withLock { $0.map(\.message) }
+            lock.lock()
+            defer { lock.unlock() }
+            return _logCalls.map(\.message)
         }
 
         // MARK: - Advanced Testing Methods
@@ -125,7 +145,9 @@ import Synchronization
         /// - Parameter level: The log level to count
         /// - Returns: The number of logs at the specified level
         public func logCount(for level: LogLevel) -> Int {
-            _logCalls.withLock { $0.count(where: { $0.level == level }) }
+            lock.lock()
+            defer { lock.unlock() }
+            return _logCalls.count(where: { $0.level == level })
         }
 
         /// Verifies that the captured log sequence exactly matches the expected levels.
@@ -133,7 +155,9 @@ import Synchronization
         /// - Parameter expectedLevels: The expected sequence of log levels
         /// - Returns: `true` if the actual log sequence matches the expected sequence exactly
         public func verifyLogSequence(_ expectedLevels: [LogLevel]) -> Bool {
-            let actualLevels = _logCalls.withLock { $0.map(\.level) }
+            lock.lock()
+            defer { lock.unlock() }
+            let actualLevels = _logCalls.map(\.level)
             return actualLevels == expectedLevels
         }
 
@@ -163,7 +187,9 @@ import Synchronization
 
         /// Returns the total number of captured logs across all levels.
         public var totalLogCount: Int {
-            _logCalls.withLock { $0.count }
+            lock.lock()
+            defer { lock.unlock() }
+            return _logCalls.count
         }
 
         /// Verifies that the last N captured logs match the expected level sequence.
@@ -171,10 +197,11 @@ import Synchronization
         /// - Parameter expectedLevels: The expected sequence of the most recent log levels
         /// - Returns: `true` if the last N logs match the expected sequence, `false` otherwise
         public func verifyLastLogs(_ expectedLevels: [LogLevel]) -> Bool {
-            let logs = _logCalls.withLock { $0 }
-            guard logs.count >= expectedLevels.count else { return false }
+            lock.lock()
+            defer { lock.unlock() }
+            guard _logCalls.count >= expectedLevels.count else { return false }
 
-            let lastLogs = Array(logs.suffix(expectedLevels.count))
+            let lastLogs = Array(_logCalls.suffix(expectedLevels.count))
             return lastLogs.map(\.level) == expectedLevels
         }
 
@@ -196,7 +223,9 @@ import Synchronization
         /// let hasErrorCode = mockLogger.hasLogMatching(level: .error) { $0.contains("ERR_404") }
         /// ```
         public func hasLogMatching(level: LogLevel, pattern: (String) -> Bool) -> Bool {
-            _logCalls.withLock { $0.contains { $0.level == level && pattern($0.message) } }
+            lock.lock()
+            defer { lock.unlock() }
+            return _logCalls.contains { $0.level == level && pattern($0.message) }
         }
     }
 
