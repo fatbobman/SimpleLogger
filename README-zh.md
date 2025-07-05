@@ -4,14 +4,14 @@
 
 一个功能强大而简洁的 Swift 6 日志库，提供全面的跨平台日志记录功能，具备增强的后端、可配置的输出级别，以及与 Apple 生态系统的无缝集成。
 
-![Swift 6](https://img.shields.io/badge/Swift-6-orange?logo=swift) ![iOS](https://img.shields.io/badge/iOS-14.0+-green) ![macOS](https://img.shields.io/badge/macOS-11.0+-green) ![watchOS](https://img.shields.io/badge/watchOS-7.0+-green) ![visionOS](https://img.shields.io/badge/visionOS-1.0+-green) ![tvOS](https://img.shields.io/badge/tvOS-14.0+-green) [![Tests](https://github.com/fatbobman/SimpleLogger/actions/workflows/linux-test.yml/badge.svg)](https://github.com/fatbobman/SimpleLogger/actions/workflows/linux-test.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/fatbobman/SimpleLogger)
+![Swift 6](https://img.shields.io/badge/Swift-6-orange?logo=swift) ![iOS](https://img.shields.io/badge/iOS-14.0+-green) ![macOS](https://img.shields.io/badge/macOS-11.0+-green) ![watchOS](https://img.shields.io/badge/watchOS-7.0+-green) ![visionOS](https://img.shields.io/badge/visionOS-1.0+-green) ![tvOS](https://img.shields.io/badge/tvOS-14.0+-green) ![Android](https://img.shields.io/badge/Android-实验性-yellow) [![Tests](https://github.com/fatbobman/SimpleLogger/actions/workflows/linux-test.yml/badge.svg)](https://github.com/fatbobman/SimpleLogger/actions/workflows/linux-test.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/fatbobman/SimpleLogger)
 
 ## 特性
 
 ### 🚀 **核心功能**
 
 - **日志级别**：支持 `.debug`、`.info`、`.warning` 和 `.error` 级别，具备智能过滤
-- **跨平台**：全面支持 Apple 平台、Linux 和其他类 Unix 系统
+- **跨平台**：全面支持 Apple 平台、Linux、Android（实验性）和其他类 Unix 系统
 - **线程安全**：使用 `DispatchQueue` 实现线程安全的异步日志记录
 - **环境可配置**：通过环境变量灵活控制日志输出
 
@@ -40,7 +40,7 @@
 
 - **Swift 6.0+**
 - **Apple 平台**：iOS 14.0+、macOS 11.0+、watchOS 7.0+、tvOS 14.0+、visionOS 1.0+
-- **其他平台**：Linux、支持 Swift 的其他类 Unix 系统
+- **其他平台**：Linux、Android（通过 Swift Android SDK 实验性支持）、支持 Swift 的其他类 Unix 系统
 
 ## 安装
 
@@ -93,7 +93,7 @@ let criticalLogger = LoggerManager(backend: OSLogBackend(
 ))
 ```
 
-#### Linux/跨平台
+#### Linux/Android/跨平台
 
 ```swift
 // 生产就绪的控制台日志器
@@ -109,6 +109,15 @@ let serverLogger = LoggerManager.console(
 let devLogger = LoggerManager.console(
     verbosity: .detailed,  // 完整元数据
     enableColors: true     // 彩色输出
+)
+
+// Android 特定配置
+// 注意：ANSI 颜色在 Android 上自动禁用
+let androidLogger = LoggerManager.console(
+    subsystem: "AndroidApp",
+    category: "Main",
+    verbosity: .standard,
+    useStderr: true       // 推荐用于 Android 日志记录
 )
 ```
 
@@ -147,6 +156,8 @@ let colorLogger = LoggerManager.console(enableColors: true)
 
 // 生产环境 - 禁用日志文件的颜色
 let prodLogger = LoggerManager.console(enableColors: false)
+
+// 注意：Android 平台不支持颜色
 ```
 
 ### 🔧 **环境控制**
@@ -230,6 +241,32 @@ class AppDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         appLogger.info("应用启动成功")
         return true
+    }
+}
+```
+
+### 📱 **Android 应用**
+
+```swift
+import SimpleLogger
+
+class AndroidApp {
+    // 为 Android 配置的控制台日志器
+    private let logger = LoggerManager.console(
+        subsystem: "com.example.androidapp",
+        category: "main",
+        verbosity: .standard,
+        useStderr: true,      // 推荐用于 Android
+        enableColors: false   // Android 上自动禁用颜色
+    )
+    
+    func onCreate() {
+        logger.info("Android 应用已启动")
+        
+        // 日志器与 Android 的日志系统无缝协作
+        logger.debug("调试信息")
+        logger.warning("警告消息")
+        logger.error("发生错误")
     }
 }
 ```

@@ -18,16 +18,16 @@ public final class ConsoleLogBackend: LoggerBackend {
 
     /// The category name
     public let category: String
-    
+
     /// The console output verbosity level
     public let verbosity: ConsoleVerbosity
-    
+
     /// A boolean value that indicates whether the logger is enabled.
     let loggerEnabled: Bool
-    
+
     /// Whether to use stderr instead of stdout
     public let useStderr: Bool
-    
+
     /// Whether to enable ANSI color codes
     public let enableColors: Bool
 
@@ -41,13 +41,13 @@ public final class ConsoleLogBackend: LoggerBackend {
     ///   - enableColors: Whether to enable ANSI color codes.
     ///   - environmentKey: The environment key to check for disabling the logger.
     public init(
-        subsystem: String = "console logger", 
-        category: String = "", 
+        subsystem: String = "console logger",
+        category: String = "",
         verbosity: ConsoleVerbosity = .detailed,
         useStderr: Bool = false,
         enableColors: Bool = true,
-        environmentKey: String = "DisableLogger"
-    ) {
+        environmentKey: String = "DisableLogger")
+    {
         self.subsystem = subsystem
         self.category = category
         self.verbosity = verbosity
@@ -75,46 +75,52 @@ public final class ConsoleLogBackend: LoggerBackend {
     ///   - metadata: The metadata to log.
     public func log(level: LogLevel, message: String, metadata: [String: String]?) {
         guard loggerEnabled && verbosity != .silent else { return }
-        
+
         let output: String
         switch verbosity {
-        case .silent:
-            return
-        case .minimal:
-            output = message
-        case .standard:
-            let timestamp = dateFormatter.string(from: Date())
-            output = "\(timestamp) [\(level.rawValue.uppercased())] \(message)"
-        case .detailed:
-            let timestamp = dateFormatter.string(from: Date())
-            let categoryPart = category.isEmpty ? "" : "[\(category)]"
-            output = "\(timestamp) [\(level.rawValue.uppercased())] \(subsystem)\(categoryPart) \(message) in \(metadata?["function"] ?? "") at \(metadata?["file"] ?? ""):\(metadata?["line"] ?? "")"
+            case .silent:
+                return
+            case .minimal:
+                output = message
+            case .standard:
+                let timestamp = dateFormatter.string(from: Date())
+                output = "\(timestamp) [\(level.rawValue.uppercased())] \(message)"
+            case .detailed:
+                let timestamp = dateFormatter.string(from: Date())
+                let categoryPart = category.isEmpty ? "" : "[\(category)]"
+                output =
+                    "\(timestamp) [\(level.rawValue.uppercased())] \(subsystem)\(categoryPart) \(message) in \(metadata?["function"] ?? "") at \(metadata?["file"] ?? ""):\(metadata?["line"] ?? "")"
         }
-        
+
         writeToConsole(output)
     }
-    
+
     /// Writes output to console with proper stream handling
     private func writeToConsole(_ message: String) {
         let finalMessage = enableColors ? colorizeMessage(message) : message
         let data = (finalMessage + "\n").data(using: .utf8) ?? Data()
-        
+
         if useStderr {
             FileHandle.standardError.write(data)
-            try? FileHandle.standardError.synchronize()  // Force flush - sufficient for most cases
+            try? FileHandle.standardError.synchronize() // Force flush - sufficient for most cases
         } else {
             FileHandle.standardOutput.write(data)
-            try? FileHandle.standardOutput.synchronize()  // Force flush - sufficient for most cases
+            try? FileHandle.standardOutput.synchronize() // Force flush - sufficient for most cases
         }
     }
-    
+
     /// Adds ANSI color codes to the message based on log level
     private func colorizeMessage(_ message: String) -> String {
-        // Check if we're in a terminal that supports colors
-        guard isatty(STDERR_FILENO) != 0 || isatty(STDOUT_FILENO) != 0 else {
+        #if os(Android)
+            // Colors are not supported on Android, return message as is
             return message
-        }
-        
+        #else
+            // Check if we're in a terminal that supports colors
+            guard isatty(STDERR_FILENO) != 0 || isatty(STDOUT_FILENO) != 0 else {
+                return message
+            }
+        #endif
+
         // Simple color detection based on log level in the message
         if message.contains("[DEBUG]") {
             return "\u{001B}[90m\(message)\u{001B}[0m" // Gray
