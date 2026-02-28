@@ -112,14 +112,13 @@ public final class ConsoleLogBackend: LoggerBackend {
     /// Adds ANSI color codes to the message based on log level
     private func colorizeMessage(_ message: String) -> String {
         #if os(Android)
-            // Colors are not supported on Android, return message as is
-            return message
+        // Colors are not supported on Android, return message as is
+        return message
         #else
-            // Check if we're in a terminal that supports colors
-            guard isatty(STDERR_FILENO) != 0 || isatty(STDOUT_FILENO) != 0 else {
-                return message
-            }
-        #endif
+        // Check if we're in a terminal that supports colors
+        guard isatty(STDERR_FILENO) != 0 || isatty(STDOUT_FILENO) != 0 else {
+            return message
+        }
 
         // Simple color detection based on log level in the message
         if message.contains("[DEBUG]") {
@@ -133,5 +132,6 @@ public final class ConsoleLogBackend: LoggerBackend {
         } else {
             return message
         }
+        #endif
     }
 }
