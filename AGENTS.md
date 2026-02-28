@@ -1,4 +1,4 @@
-# AGENT.md
+# AGENTS.md
 
 This repository is a small Swift Package that provides a backend-agnostic logging API for Swift 6 projects.
 

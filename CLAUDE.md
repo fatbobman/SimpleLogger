@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 This file provides guidance to Claude Code when working with this repository.
-For authoritative project details, architecture, build commands, platform notes, and agent rules, see **[AGENT.md](./AGENT.md)**.
+For authoritative project details, architecture, build commands, platform notes, and agent rules, see **[AGENTS.md](./AGENTS.md)**.
 
 ## Claude-Specific Supplements
 
