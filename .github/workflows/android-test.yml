@@ -1,4 +1,4 @@
-name: Android Build Test
+name: Android Tests
 
 on:
   push:
@@ -8,17 +8,18 @@ on:
   workflow_dispatch:
 
 jobs:
-  android-build:
-    name: Android Cross-Compile
+  android-test:
+    name: Android Package Tests
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: Build Swift package for Android
+    - name: Build and test Swift package on Android
       uses: skiptools/swift-android-action@v2
       with:
         swift-version: '6.2'
+        free-disk-space: true
         build-package: true
-        build-tests: false
-        run-tests: false
+        build-tests: true
+        run-tests: true

@@ -68,8 +68,8 @@ swift test -q
   - `.github/workflows/android-test.yml`
 - Both workflows are triggered on pushes to `main` and `develop`, pull requests targeting `main`, and can be run manually.
 - `linux-test.yml` runs on `ubuntu-latest` with the `swift:6.0` container.
-- `android-test.yml` runs on `ubuntu-latest` and verifies Android cross-compilation through `skiptools/swift-android-action`.
-- Current CI coverage includes package build, full Linux test execution, Linux console backend scenarios, environment-variable behavior, `MockLogBackend` concurrency checks, and Android build validation.
+- `android-test.yml` runs on `ubuntu-latest` and builds and runs Swift package tests on Android through `skiptools/swift-android-action`.
+- Current CI coverage includes package build, full Linux test execution, Linux console backend scenarios, environment-variable behavior, `MockLogBackend` concurrency checks, and Android package test execution.
 
 ## Notes For Agents
 

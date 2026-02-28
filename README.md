@@ -4,7 +4,7 @@
 
 A powerful yet simple logging library for Swift 6, providing comprehensive cross-platform logging with enhanced backends, configurable output levels, and seamless Apple ecosystem integration.
 
-![Swift 6](https://img.shields.io/badge/Swift-6-orange?logo=swift) ![iOS](https://img.shields.io/badge/iOS-14.0+-green) ![macOS](https://img.shields.io/badge/macOS-11.0+-green) ![watchOS](https://img.shields.io/badge/watchOS-7.0+-green) ![visionOS](https://img.shields.io/badge/visionOS-1.0+-green) ![tvOS](https://img.shields.io/badge/tvOS-14.0+-green) ![Android](https://img.shields.io/badge/Android-Experimental-yellow) [![Linux Tests](https://github.com/fatbobman/SimpleLogger/actions/workflows/linux-test.yml/badge.svg)](https://github.com/fatbobman/SimpleLogger/actions/workflows/linux-test.yml) [![Android Build](https://github.com/fatbobman/SimpleLogger/actions/workflows/android-test.yml/badge.svg)](https://github.com/fatbobman/SimpleLogger/actions/workflows/android-test.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/fatbobman/SimpleLogger)
+![Swift 6](https://img.shields.io/badge/Swift-6-orange?logo=swift) ![iOS](https://img.shields.io/badge/iOS-14.0+-green) ![macOS](https://img.shields.io/badge/macOS-11.0+-green) ![watchOS](https://img.shields.io/badge/watchOS-7.0+-green) ![visionOS](https://img.shields.io/badge/visionOS-1.0+-green) ![tvOS](https://img.shields.io/badge/tvOS-14.0+-green) ![Android](https://img.shields.io/badge/Android-Experimental-yellow) [![Linux Tests](https://github.com/fatbobman/SimpleLogger/actions/workflows/linux-test.yml/badge.svg)](https://github.com/fatbobman/SimpleLogger/actions/workflows/linux-test.yml) [![Android Tests](https://github.com/fatbobman/SimpleLogger/actions/workflows/android-test.yml/badge.svg)](https://github.com/fatbobman/SimpleLogger/actions/workflows/android-test.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/fatbobman/SimpleLogger)
 
 ## Features
 
@@ -45,7 +45,7 @@ A powerful yet simple logging library for Swift 6, providing comprehensive cross
 ## CI
 
 - `linux-test.yml`: Builds the package and runs the Linux test matrix in GitHub Actions
-- `android-test.yml`: Verifies Android cross-compilation in GitHub Actions
+- `android-test.yml`: Builds and runs Swift package tests on Android in GitHub Actions
 
 ## Installation
 
