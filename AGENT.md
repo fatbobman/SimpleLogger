@@ -60,6 +60,9 @@ swift test -q
 - Use release tags in `x.x.x` format.
 - Do not create new release tags with a `v` prefix.
 - If release documentation mentions a version, keep it aligned with the latest `x.x.x` tag used by the repository.
+- Prefer curated GitHub release notes over raw auto-generated notes.
+- Keep release notes short and user-facing. Summarize the main API changes, platform/CI changes, tooling changes, and any notable documentation updates.
+- When a release is not breaking, say so explicitly instead of implying a major migration.
 
 ## GitHub Actions
 
