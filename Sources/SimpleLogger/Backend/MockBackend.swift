@@ -171,7 +171,8 @@ import Foundation
         ///   - substring: The substring to search for in the log message
         ///   - timeout: The maximum time to wait in seconds (default: 1.0)
         /// - Returns: `true` if the log appears within the timeout, `false` otherwise
-        public func waitForLog(level: LogLevel, containing substring: String, timeout: TimeInterval = 1.0) async -> Bool {
+        public func waitForLog(level: LogLevel, containing substring: String, timeout: TimeInterval = 1.0) async -> Bool
+        {
             let startTime = Date()
 
             while Date().timeIntervalSince(startTime) < timeout {
@@ -179,7 +180,7 @@ import Foundation
                     return true
                 }
                 // Brief wait before checking again
-                try? await Task.sleep(nanoseconds: 10_000_000) // 10ms
+                try? await Task.sleep(nanoseconds: 10_000_000)  // 10ms
             }
 
             return false

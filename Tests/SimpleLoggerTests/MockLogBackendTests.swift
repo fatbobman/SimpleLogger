@@ -1,6 +1,7 @@
 import Foundation
-@testable import SimpleLogger
 import Testing
+
+@testable import SimpleLogger
 
 #if DEBUG
 
@@ -183,7 +184,7 @@ import Testing
 
         // Start async task that logs after delay
         Task {
-            try await Task.sleep(nanoseconds: 50_000_000) // 50ms
+            try await Task.sleep(nanoseconds: 50_000_000)  // 50ms
             mockLogger.info("Delayed message")
         }
 
@@ -221,7 +222,7 @@ import Testing
         let mockLogger = MockLogBackend()
 
         // Add many logs
-        for i in 0 ..< 1000 {
+        for i in 0..<1000 {
             switch i % 4 {
                 case 0: mockLogger.debug("Debug \(i)")
                 case 1: mockLogger.info("Info \(i)")
@@ -252,7 +253,7 @@ import Testing
 
         // Create multiple concurrent tasks
         await withTaskGroup(of: Void.self) { group in
-            for i in 0 ..< 100 {
+            for i in 0..<100 {
                 group.addTask {
                     mockLogger.info("Concurrent message \(i)")
                 }
@@ -265,7 +266,7 @@ import Testing
 
         // Verify all messages are present (order may vary due to concurrency)
         let messages = mockLogger.allLogMessages
-        for i in 0 ..< 100 {
+        for i in 0..<100 {
             #expect(messages.contains("Concurrent message \(i)"))
         }
     }

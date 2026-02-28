@@ -15,6 +15,7 @@ import Foundation
 public final class LoggerManager: LoggerManagerProtocol, @unchecked Sendable {
     let backend: LoggerBackend
     let queue: DispatchQueue
+    let queueKey = DispatchSpecificKey<Void>()
 
     /// Initializes a `LoggerManager` instance with the specified backend and dispatch queue quality of service.
     ///
@@ -27,6 +28,7 @@ public final class LoggerManager: LoggerManagerProtocol, @unchecked Sendable {
     ) {
         self.backend = backend
         queue = DispatchQueue(label: backend.subsystem, qos: qos)
+        queue.setSpecific(key: queueKey, value: ())
     }
 
     /// Logs a message with the specified level, file, function, and line.
@@ -52,5 +54,11 @@ public final class LoggerManager: LoggerManagerProtocol, @unchecked Sendable {
             ]
             self.backend.log(level: level, message: message, metadata: metadata)
         }
+    }
+
+    /// Blocks until all previously enqueued log messages have been handed off to the backend.
+    public func flush() {
+        guard DispatchQueue.getSpecific(key: queueKey) == nil else { return }
+        queue.sync {}
     }
 }

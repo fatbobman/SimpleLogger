@@ -46,8 +46,8 @@ public final class ConsoleLogBackend: LoggerBackend {
         verbosity: ConsoleVerbosity = .detailed,
         useStderr: Bool = false,
         enableColors: Bool = true,
-        environmentKey: String = "DisableLogger")
-    {
+        environmentKey: String = "DisableLogger"
+    ) {
         self.subsystem = subsystem
         self.category = category
         self.verbosity = verbosity
@@ -102,10 +102,10 @@ public final class ConsoleLogBackend: LoggerBackend {
 
         if useStderr {
             FileHandle.standardError.write(data)
-            try? FileHandle.standardError.synchronize() // Force flush - sufficient for most cases
+            try? FileHandle.standardError.synchronize()  // Force flush - sufficient for most cases
         } else {
             FileHandle.standardOutput.write(data)
-            try? FileHandle.standardOutput.synchronize() // Force flush - sufficient for most cases
+            try? FileHandle.standardOutput.synchronize()  // Force flush - sufficient for most cases
         }
     }
 
@@ -123,13 +123,13 @@ public final class ConsoleLogBackend: LoggerBackend {
 
         // Simple color detection based on log level in the message
         if message.contains("[DEBUG]") {
-            return "\u{001B}[90m\(message)\u{001B}[0m" // Gray
+            return "\u{001B}[90m\(message)\u{001B}[0m"  // Gray
         } else if message.contains("[INFO]") {
-            return "\u{001B}[36m\(message)\u{001B}[0m" // Cyan
+            return "\u{001B}[36m\(message)\u{001B}[0m"  // Cyan
         } else if message.contains("[WARNING]") {
-            return "\u{001B}[33m\(message)\u{001B}[0m" // Yellow
+            return "\u{001B}[33m\(message)\u{001B}[0m"  // Yellow
         } else if message.contains("[ERROR]") {
-            return "\u{001B}[31m\(message)\u{001B}[0m" // Red
+            return "\u{001B}[31m\(message)\u{001B}[0m"  // Red
         } else {
             return message
         }

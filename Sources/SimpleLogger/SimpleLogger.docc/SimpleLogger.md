@@ -10,7 +10,7 @@ A powerful yet simple logging library for Swift 6, providing comprehensive cross
 - **Advanced OSLog Integration**: Privacy support, enhanced warning levels, and intelligent fallback.
 - **Custom Backends**: Easily create custom log backends by conforming to `LoggerBackend`.
 - **MockLogBackend**: Powerful testing utilities with thread-safe log capture and inspection.
-- **Thread Safety**: Utilizes `DispatchQueue` and Swift 6 `Synchronization.Mutex` for thread-safe logging.
+- **Thread Safety**: Uses `DispatchQueue` in `LoggerManager` and `NSLock` in `MockLogBackend`.
 - **Environment Configurable**: Control logging output via environment variables.
 
 ## Usage
@@ -21,6 +21,16 @@ A powerful yet simple logging library for Swift 6, providing comprehensive cross
 
 ```swift
 let logger: LoggerManagerProtocol = .default(subsystem: "com.yourapp", category: "networking")
+```
+
+On supported Apple platforms this uses `OSLogBackend`. On other platforms it falls back to `ConsoleLogBackend(verbosity: .standard)`. The `useStderr` parameter only affects that console fallback path.
+
+```swift
+let fallbackLogger: LoggerManagerProtocol = .default(
+    subsystem: "MyServer",
+    category: "API",
+    useStderr: true
+)
 ```
 
 #### Console Logger
@@ -36,6 +46,16 @@ logger.debug("This is a debug message")
 logger.info("This is an info message")
 logger.warning("This is a warning message")
 logger.error("This is an error message")
+```
+
+### Draining Async Logs
+
+``LoggerManager`` remains asynchronous by default. For short-lived processes such as CLI tools or tests, call `flush()` before exit to ensure queued log messages have been handed off to the backend.
+
+```swift
+let logger: LoggerManagerProtocol = .console()
+logger.info("Finishing work")
+logger.flush()
 ```
 
 ### Custom Logger Backend
@@ -64,10 +84,10 @@ struct CustomLoggerBackend: LoggerBackend {
 
 ### Disabling Logs
 
-Set the `DisableLogger` environment variable to disable logging:
+Set the `DisableLogger` environment variable in the process environment before launch to disable logging:
 
 ```swift
-ProcessInfo.processInfo.environment["DisableLogger"] = "true"
+DisableLogger=true swift run
 ```
 
 ## Examples
@@ -318,5 +338,3 @@ struct TestLogger: LoggerManagerProtocol {
 ### Utilities
 
 - ``ConsoleVerbosity``
-
-

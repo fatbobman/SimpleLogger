@@ -12,6 +12,10 @@
 import Foundation
 
 /// A protocol that defines the interface for a logger backend.
+///
+/// ``LoggerBackend`` instances are designed to be driven by ``LoggerManager``, which provides
+/// serialized access for built-in backends. If a backend is used directly from multiple threads,
+/// the backend implementation is responsible for its own synchronization.
 public protocol LoggerBackend: Sendable {
     /// The subsystem name.
     var subsystem: String { get }

@@ -1,6 +1,7 @@
 import Foundation
-@testable import SimpleLogger
 import Testing
+
+@testable import SimpleLogger
 
 #if DEBUG
 

@@ -1,0 +1,24 @@
+name: Android Build Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  android-build:
+    name: Android Cross-Compile
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build Swift package for Android
+      uses: skiptools/swift-android-action@v2
+      with:
+        swift-version: '6.2'
+        build-package: true
+        build-tests: false
+        run-tests: false

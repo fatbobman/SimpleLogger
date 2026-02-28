@@ -27,10 +27,16 @@ public protocol LoggerManagerProtocol: Sendable {
         file: String,
         function: String,
         line: Int)
+
+    /// Blocks until previously submitted log work has completed.
+    func flush()
 }
 
 /// Default implementations for the `LoggerManagerProtocol`.
 extension LoggerManagerProtocol {
+    /// Default no-op implementation for loggers that do not buffer asynchronously.
+    public func flush() {}
+
     /// Logs a debug message.
     ///
     /// - Parameters:
@@ -83,15 +89,29 @@ extension LoggerManagerProtocol where Self == LoggerManager {
     /// - Parameters:
     ///   - subsystem: The subsystem name.
     ///   - category: The category name.
-    public static func `default`(subsystem: String, category: String) -> Self {
+    ///   - useStderr: On non-Apple fallback paths, whether console output should be written to stderr.
+    ///
+    /// On supported Apple OS versions this factory creates an ``OSLogBackend``. On other platforms, or
+    /// when `OSLog` is unavailable, it falls back to ``ConsoleLogBackend`` with `.standard` verbosity.
+    ///
+    /// `subsystem` and `category` must not be empty or whitespace-only when the `OSLogBackend` path is used.
+    public static func `default`(
+        subsystem: String,
+        category: String,
+        useStderr: Bool = false
+    ) -> Self {
         #if canImport(OSLog)
             if #available(iOS 14.0, macOS 11.0, watchOS 7.0, tvOS 14.0, visionOS 1.0, *) {
                 LoggerManager(backend: OSLogBackend(subsystem: subsystem, category: category))
             } else {
-                LoggerManager(backend: ConsoleLogBackend(subsystem: subsystem, category: category, verbosity: .standard, useStderr: false))
+                LoggerManager(
+                    backend: ConsoleLogBackend(
+                        subsystem: subsystem, category: category, verbosity: .standard, useStderr: useStderr))
             }
         #else
-            LoggerManager(backend: ConsoleLogBackend(subsystem: subsystem, category: category, verbosity: .standard, useStderr: false))
+            LoggerManager(
+                backend: ConsoleLogBackend(
+                    subsystem: subsystem, category: category, verbosity: .standard, useStderr: useStderr))
         #endif
     }
 
@@ -107,15 +127,16 @@ extension LoggerManagerProtocol where Self == LoggerManager {
         subsystem: String = "Console Logger",
         category: String = "",
         verbosity: ConsoleVerbosity = .detailed,
-        useStderr: Bool = false, // Default to stdout for better visibility in tests
-        enableColors: Bool = true) -> Self
-    {
-        LoggerManager(backend: ConsoleLogBackend(
-            subsystem: subsystem,
-            category: category,
-            verbosity: verbosity,
-            useStderr: useStderr,
-            enableColors: enableColors))
+        useStderr: Bool = false,  // Default to stdout for better visibility in tests
+        enableColors: Bool = true
+    ) -> Self {
+        LoggerManager(
+            backend: ConsoleLogBackend(
+                subsystem: subsystem,
+                category: category,
+                verbosity: verbosity,
+                useStderr: useStderr,
+                enableColors: enableColors))
     }
 }
 

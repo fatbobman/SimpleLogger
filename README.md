@@ -4,14 +4,14 @@
 
 A powerful yet simple logging library for Swift 6, providing comprehensive cross-platform logging with enhanced backends, configurable output levels, and seamless Apple ecosystem integration.
 
-![Swift 6](https://img.shields.io/badge/Swift-6-orange?logo=swift) ![iOS](https://img.shields.io/badge/iOS-14.0+-green) ![macOS](https://img.shields.io/badge/macOS-11.0+-green) ![watchOS](https://img.shields.io/badge/watchOS-7.0+-green) ![visionOS](https://img.shields.io/badge/visionOS-1.0+-green) ![tvOS](https://img.shields.io/badge/tvOS-14.0+-green) ![Android](https://img.shields.io/badge/Android-Experimental-yellow) [![Tests](https://github.com/fatbobman/SimpleLogger/actions/workflows/linux-test.yml/badge.svg)](https://github.com/fatbobman/SimpleLogger/actions/workflows/linux-test.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/fatbobman/SimpleLogger)
+![Swift 6](https://img.shields.io/badge/Swift-6-orange?logo=swift) ![iOS](https://img.shields.io/badge/iOS-14.0+-green) ![macOS](https://img.shields.io/badge/macOS-11.0+-green) ![watchOS](https://img.shields.io/badge/watchOS-7.0+-green) ![visionOS](https://img.shields.io/badge/visionOS-1.0+-green) ![tvOS](https://img.shields.io/badge/tvOS-14.0+-green) ![Android](https://img.shields.io/badge/Android-Experimental-yellow) [![Linux Tests](https://github.com/fatbobman/SimpleLogger/actions/workflows/linux-test.yml/badge.svg)](https://github.com/fatbobman/SimpleLogger/actions/workflows/linux-test.yml) [![Android Build](https://github.com/fatbobman/SimpleLogger/actions/workflows/android-test.yml/badge.svg)](https://github.com/fatbobman/SimpleLogger/actions/workflows/android-test.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/fatbobman/SimpleLogger)
 
 ## Features
 
 ### 🚀 **Core Features**
 
 - **Log Levels**: Supports `.debug`, `.info`, `.warning`, and `.error` levels with intelligent filtering
-- **Cross-Platform**: Full support for Apple platforms, Linux, Android (experimental), and other Unix-like systems
+- **Cross-Platform**: Support for Apple platforms, Linux, Android (experimental build support), and other Unix-like systems
 - **Thread Safety**: Utilizes `DispatchQueue` for thread-safe asynchronous logging
 - **Environment Configurable**: Flexible logging control via environment variables
 
@@ -34,13 +34,18 @@ A powerful yet simple logging library for Swift 6, providing comprehensive cross
 - **Custom Backends**: Easily create custom log backends by conforming to `LoggerBackend`
 - **Protocol-Oriented Design**: Clean abstractions for testing and mocking
 - **MockLogBackend**: Powerful testing utilities with thread-safe log capture and inspection
-- **Comprehensive Documentation**: Built-in Claude Code development guidance
+- **Comprehensive Documentation**: Repository guidance for coding agents and contributors
 
 ## Requirements
 
 - **Swift 6.0+**
 - **Apple Platforms**: iOS 14.0+, macOS 11.0+, watchOS 7.0+, tvOS 14.0+, visionOS 1.0+
-- **Other Platforms**: Linux, Android (experimental via Swift Android SDK), other Unix-like systems with Swift support
+- **Other Platforms**: Linux, Android (experimental build support), and other Unix-like systems with Swift support
+
+## CI
+
+- `linux-test.yml`: Builds the package and runs the Linux test matrix in GitHub Actions
+- `android-test.yml`: Verifies Android cross-compilation in GitHub Actions
 
 ## Installation
 
@@ -67,7 +72,7 @@ import SimpleLogger
 ```swift
 import SimpleLogger
 
-// Default logger - OSLog on Apple platforms, Console elsewhere  
+// Default logger - OSLog on supported Apple platforms, Console elsewhere
 let logger: LoggerManagerProtocol = .default(subsystem: "com.yourapp", category: "main")
 
 // Log at different levels
@@ -76,6 +81,18 @@ logger.info("App started successfully")
 logger.warning("Potential issue detected")
 logger.error("Critical error occurred")
 ```
+
+### ⏳ **Draining Async Logs**
+
+`LoggerManager` remains asynchronous by default. For short-lived processes such as CLI tools or tests, call `flush()` before exit to ensure queued log messages have been handed off to the backend.
+
+```swift
+let logger: LoggerManagerProtocol = .console()
+logger.info("Finishing work")
+logger.flush()
+```
+
+`LoggerManager.default(subsystem:category:useStderr:)` uses `OSLogBackend` on supported Apple platforms and falls back to `ConsoleLogBackend(verbosity: .standard)` elsewhere. The `useStderr` argument only affects the non-Apple console fallback path.
 
 ### 📱 **Platform-Specific Configuration**
 
@@ -111,13 +128,20 @@ let devLogger = LoggerManager.console(
     enableColors: true     // Colored output
 )
 
-// Android-specific configuration
-// Note: ANSI colors are automatically disabled on Android
+// Android-oriented configuration
+// Note: ANSI colors are disabled by the backend on Android targets
 let androidLogger = LoggerManager.console(
     subsystem: "AndroidApp",
     category: "Main",
     verbosity: .standard,
     useStderr: true       // Recommended for Android logging
+)
+
+// Default fallback logger for non-Apple platforms
+let fallbackLogger: LoggerManagerProtocol = .default(
+    subsystem: "MyServer",
+    category: "API",
+    useStderr: true
 )
 ```
 
@@ -157,7 +181,7 @@ let colorLogger = LoggerManager.console(enableColors: true)
 // Production - disable colors for log files
 let prodLogger = LoggerManager.console(enableColors: false)
 
-// Note: Colors are not supported on Android platform
+// Note: Colors are disabled on Android targets
 ```
 
 ### 🔧 **Environment Control**
@@ -251,19 +275,19 @@ class AppDelegate {
 import SimpleLogger
 
 class AndroidApp {
-    // Console logger configured for Android
+    // Console logger configured for an Android target
     private let logger = LoggerManager.console(
         subsystem: "com.example.androidapp",
         category: "main",
         verbosity: .standard,
         useStderr: true,      // Recommended for Android
-        enableColors: false   // Colors automatically disabled on Android
+        enableColors: false   // Colors are disabled on Android targets
     )
     
     func onCreate() {
         logger.info("Android app started")
         
-        // The logger works seamlessly with Android's logging system
+        // Logs are still emitted through the console backend
         logger.debug("Debug information")
         logger.warning("Warning message")
         logger.error("Error occurred")
@@ -391,7 +415,7 @@ import SimpleLogger
 
 #### MockLogBackend Features
 
-- **Thread-Safe**: Uses Swift 6 `Synchronization.Mutex` for concurrent access
+- **Thread-Safe**: Uses `NSLock` for concurrent access inside `MockLogBackend`
 - **Comprehensive Inspection**: Check logs by level, content, patterns, and sequences
 - **Async Support**: `waitForLog()` method for testing asynchronous operations
 - **Cross-Platform**: Available on all platforms supporting Swift 6
@@ -475,11 +499,11 @@ let logger = LoggerManager.default(
 ### ⚡ **Performance Considerations**
 
 ```swift
-// ✅ Good - Conditional expensive operations
-if logger.isLoggingEnabled(for: .debug) {  // Hypothetical API
-    let expensiveDebugInfo = generateDetailedReport()
-    logger.debug("Debug report: \\(expensiveDebugInfo)")
-}
+// ✅ Good - Gate expensive debug work behind build configuration
+#if DEBUG
+let expensiveDebugInfo = generateDetailedReport()
+logger.debug("Debug report: \\(expensiveDebugInfo)")
+#endif
 
 // ✅ Good - Simple messages are fine
 logger.info("User logged in: \\(userID)")

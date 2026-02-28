@@ -17,7 +17,7 @@ let package = Package(
         .library(
             name: "SimpleLogger",
             targets: ["SimpleLogger"]
-        ),
+        )
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.

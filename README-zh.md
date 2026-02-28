@@ -4,14 +4,14 @@
 
 一个功能强大而简洁的 Swift 6 日志库，提供全面的跨平台日志记录功能，具备增强的后端、可配置的输出级别，以及与 Apple 生态系统的无缝集成。
 
-![Swift 6](https://img.shields.io/badge/Swift-6-orange?logo=swift) ![iOS](https://img.shields.io/badge/iOS-14.0+-green) ![macOS](https://img.shields.io/badge/macOS-11.0+-green) ![watchOS](https://img.shields.io/badge/watchOS-7.0+-green) ![visionOS](https://img.shields.io/badge/visionOS-1.0+-green) ![tvOS](https://img.shields.io/badge/tvOS-14.0+-green) ![Android](https://img.shields.io/badge/Android-实验性-yellow) [![Tests](https://github.com/fatbobman/SimpleLogger/actions/workflows/linux-test.yml/badge.svg)](https://github.com/fatbobman/SimpleLogger/actions/workflows/linux-test.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/fatbobman/SimpleLogger)
+![Swift 6](https://img.shields.io/badge/Swift-6-orange?logo=swift) ![iOS](https://img.shields.io/badge/iOS-14.0+-green) ![macOS](https://img.shields.io/badge/macOS-11.0+-green) ![watchOS](https://img.shields.io/badge/watchOS-7.0+-green) ![visionOS](https://img.shields.io/badge/visionOS-1.0+-green) ![tvOS](https://img.shields.io/badge/tvOS-14.0+-green) ![Android](https://img.shields.io/badge/Android-实验性-yellow) [![Linux Tests](https://github.com/fatbobman/SimpleLogger/actions/workflows/linux-test.yml/badge.svg)](https://github.com/fatbobman/SimpleLogger/actions/workflows/linux-test.yml) [![Android Build](https://github.com/fatbobman/SimpleLogger/actions/workflows/android-test.yml/badge.svg)](https://github.com/fatbobman/SimpleLogger/actions/workflows/android-test.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/fatbobman/SimpleLogger)
 
 ## 特性
 
 ### 🚀 **核心功能**
 
 - **日志级别**：支持 `.debug`、`.info`、`.warning` 和 `.error` 级别，具备智能过滤
-- **跨平台**：全面支持 Apple 平台、Linux、Android（实验性）和其他类 Unix 系统
+- **跨平台**：支持 Apple 平台、Linux、Android（实验性构建支持）和其他类 Unix 系统
 - **线程安全**：使用 `DispatchQueue` 实现线程安全的异步日志记录
 - **环境可配置**：通过环境变量灵活控制日志输出
 
@@ -34,13 +34,18 @@
 - **自定义后端**：通过遵循 `LoggerBackend` 轻松创建自定义日志后端
 - **面向协议的设计**：用于测试和模拟的清晰抽象
 - **MockLogBackend**：具有线程安全日志捕获和检查的强大测试工具
-- **全面的文档**：内置 Claude Code 开发指导
+- **全面的文档**：为编码代理和贡献者提供仓库说明
 
 ## 系统要求
 
 - **Swift 6.0+**
 - **Apple 平台**：iOS 14.0+、macOS 11.0+、watchOS 7.0+、tvOS 14.0+、visionOS 1.0+
-- **其他平台**：Linux、Android（通过 Swift Android SDK 实验性支持）、支持 Swift 的其他类 Unix 系统
+- **其他平台**：Linux、Android（实验性构建支持）以及支持 Swift 的其他类 Unix 系统
+
+## CI
+
+- `linux-test.yml`：在 GitHub Actions 中构建并运行 Linux 测试矩阵
+- `android-test.yml`：在 GitHub Actions 中验证 Android 交叉编译
 
 ## 安装
 
@@ -67,7 +72,7 @@ import SimpleLogger
 ```swift
 import SimpleLogger
 
-// 默认日志器 - Apple 平台使用 OSLog，其他平台使用控制台
+// 默认日志器 - 在受支持的 Apple 平台上使用 OSLog，其他平台使用控制台
 let logger: LoggerManagerProtocol = .default(subsystem: "com.yourapp", category: "main")
 
 // 在不同级别记录日志
@@ -76,6 +81,18 @@ logger.info("应用启动成功")
 logger.warning("检测到潜在问题")
 logger.error("发生关键错误")
 ```
+
+### ⏳ **排空异步日志**
+
+`LoggerManager` 默认仍然是异步的。对于 CLI 工具、测试等短生命周期场景，可在退出前调用 `flush()`，确保队列中的日志已经交给 backend 处理。
+
+```swift
+let logger: LoggerManagerProtocol = .console()
+logger.info("任务即将结束")
+logger.flush()
+```
+
+`LoggerManager.default(subsystem:category:useStderr:)` 在受支持的 Apple 平台上使用 `OSLogBackend`，在其他平台回退为 `ConsoleLogBackend(verbosity: .standard)`。`useStderr` 参数只影响非 Apple 平台的控制台回退路径。
 
 ### 📱 **平台特定配置**
 
@@ -111,13 +128,20 @@ let devLogger = LoggerManager.console(
     enableColors: true     // 彩色输出
 )
 
-// Android 特定配置
-// 注意：ANSI 颜色在 Android 上自动禁用
+// 面向 Android 目标的配置
+// 注意：在 Android 目标上，后端会禁用 ANSI 颜色
 let androidLogger = LoggerManager.console(
     subsystem: "AndroidApp",
     category: "Main",
     verbosity: .standard,
     useStderr: true       // 推荐用于 Android 日志记录
+)
+
+// 非 Apple 平台上的默认回退日志器
+let fallbackLogger: LoggerManagerProtocol = .default(
+    subsystem: "MyServer",
+    category: "API",
+    useStderr: true
 )
 ```
 
@@ -157,7 +181,7 @@ let colorLogger = LoggerManager.console(enableColors: true)
 // 生产环境 - 禁用日志文件的颜色
 let prodLogger = LoggerManager.console(enableColors: false)
 
-// 注意：Android 平台不支持颜色
+// 注意：在 Android 目标上会禁用颜色
 ```
 
 ### 🔧 **环境控制**
@@ -251,19 +275,19 @@ class AppDelegate {
 import SimpleLogger
 
 class AndroidApp {
-    // 为 Android 配置的控制台日志器
+    // 为 Android 目标配置的控制台日志器
     private let logger = LoggerManager.console(
         subsystem: "com.example.androidapp",
         category: "main",
         verbosity: .standard,
         useStderr: true,      // 推荐用于 Android
-        enableColors: false   // Android 上自动禁用颜色
+        enableColors: false   // 在 Android 目标上禁用颜色
     )
     
     func onCreate() {
         logger.info("Android 应用已启动")
         
-        // 日志器与 Android 的日志系统无缝协作
+        // 日志仍通过控制台后端输出
         logger.debug("调试信息")
         logger.warning("警告消息")
         logger.error("发生错误")
@@ -391,7 +415,7 @@ import SimpleLogger
 
 #### MockLogBackend 特性
 
-- **线程安全**：使用 Swift 6 `Synchronization.Mutex` 进行并发访问
+- **线程安全**：`MockLogBackend` 内部使用 `NSLock` 进行并发访问
 - **全面检查**：按级别、内容、模式和序列检查日志
 - **异步支持**：用于测试异步操作的 `waitForLog()` 方法
 - **跨平台**：在所有支持 Swift 6 的平台上可用
@@ -475,11 +499,11 @@ let logger = LoggerManager.default(
 ### ⚡ **性能考虑**
 
 ```swift
-// ✅ 良好 - 条件性昂贵操作
-if logger.isLoggingEnabled(for: .debug) {  // 假设的 API
-    let expensiveDebugInfo = generateDetailedReport()
-    logger.debug("调试报告: \(expensiveDebugInfo)")
-}
+// ✅ 良好 - 通过构建配置限制昂贵的调试工作
+#if DEBUG
+let expensiveDebugInfo = generateDetailedReport()
+logger.debug("调试报告: \(expensiveDebugInfo)")
+#endif
 
 // ✅ 良好 - 简单消息没问题
 logger.info("用户登录: \(userID)")
